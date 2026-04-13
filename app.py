@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import os
 import csv
@@ -6,7 +6,6 @@ from datetime import datetime
 from pathlib import Path
 
 import streamlit as st
-from init_chromadb import ingest as chroma_ingest
 
 try:
     from chromadb import PersistentClient
@@ -15,12 +14,11 @@ except Exception as exc:
 
 DB_PATH = "./hr_chroma_db"
 COLLECTION_NAME = "employee_db"
-HANDBOOK_FILENAME = "employee-handbook.html"
+HANDBOOK_FILENAME = "employee-handbook.pdf"
 LOG_PATH = Path("access_log.csv")
 
 
 # -----------------------------
-
 # Data helpers
 # -----------------------------
 def log_access(email: str, metadata: dict):
@@ -68,52 +66,6 @@ def get_collection(client, name: str):
         return client.get_collection(name)
     except Exception:
         return client.create_collection(name)
-
-
-def find_csv_files() -> list[str]:
-    csv_files = [
-        str(path)
-        for path in Path.cwd().glob("*.csv")
-        if path.name.lower() != LOG_PATH.name.lower()
-    ]
-    return sorted(csv_files)
-
-
-def is_collection_empty(collection) -> bool:
-    try:
-        count = collection.count()
-        return count == 0
-    except Exception:
-        try:
-            result = collection.get(ids=["__chroma_probe__"])
-            return len(result.get("ids", [])) == 0
-        except Exception:
-            return True
-
-
-def ensure_database_bootstrapped():
-    db_folder = Path(DB_PATH)
-    if not db_folder.exists() or not any(db_folder.iterdir()):
-        return True
-
-    client = get_chroma_client()
-    collection = get_collection(client, COLLECTION_NAME)
-    return is_collection_empty(collection)
-
-
-def bootstrap_database():
-    if not ensure_database_bootstrapped():
-        return False
-
-    csv_files = find_csv_files()
-    if not csv_files:
-        return False
-
-    for csv_path in csv_files:
-        if Path(csv_path).name.lower() == LOG_PATH.name.lower():
-            continue
-        chroma_ingest(csv_path=csv_path, chunk_size=10000, client_path=DB_PATH)
-    return True
 
 
 # -----------------------------
@@ -548,30 +500,6 @@ def main():
 
     inject_css()
     render_hero()
-
-    needs_bootstrap = ensure_database_bootstrapped()
-    if needs_bootstrap:
-        csv_files = find_csv_files()
-        if csv_files:
-            st.info(f"Found {len(csv_files)} CSV file(s) ready for ingestion:")
-            st.write("\n".join([f"- {Path(csv).name}" for csv in csv_files]))
-        else:
-            st.warning("No CSV files are present in the repo. Add CSV files to ingest records into Chroma.")
-
-        st.warning("Database is not yet initialized. Click the button below to load CSV data into Chroma.")
-        if st.button("Initialize database from CSV files"):
-            with st.spinner("Bootstrapping database from CSV files..."):
-                try:
-                    success = bootstrap_database()
-                    if success:
-                        st.success("Database initialization complete. Refresh the page to continue.")
-                    else:
-                        st.error("No CSV files were found or bootstrap failed.")
-                except Exception as exc:
-                    st.error(f"Database bootstrap failed: {exc}")
-            st.stop()
-        render_footer_stats()
-        return
 
     client = get_chroma_client()
     collection = get_collection(client, COLLECTION_NAME)
