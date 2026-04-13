@@ -14,7 +14,7 @@ except Exception as exc:
 
 DB_PATH = "./hr_chroma_db"
 COLLECTION_NAME = "employee_db"
-HANDBOOK_FILENAME = "employee-handbook.pdf"
+HANDBOOK_FILENAME = "employee-handbook.html"
 LOG_PATH = Path("access_log.csv")
 
 
@@ -551,7 +551,7 @@ def main():
                         label="Download Employee Handbook",
                         data=pdf_bytes,
                         file_name=HANDBOOK_FILENAME,
-                        mime="application/pdf",
+                        mime="text/html",
                         use_container_width=True,
                     )
                 except Exception as exc:
