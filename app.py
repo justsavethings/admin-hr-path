@@ -549,8 +549,29 @@ def main():
     inject_css()
     render_hero()
 
-    if bootstrap_database():
-        st.info("Preparing database from CSV files. This may take a moment.")
+    needs_bootstrap = ensure_database_bootstrapped()
+    if needs_bootstrap:
+        csv_files = find_csv_files()
+        if csv_files:
+            st.info(f"Found {len(csv_files)} CSV file(s) ready for ingestion:")
+            st.write("\n".join([f"- {Path(csv).name}" for csv in csv_files]))
+        else:
+            st.warning("No CSV files are present in the repo. Add CSV files to ingest records into Chroma.")
+
+        st.warning("Database is not yet initialized. Click the button below to load CSV data into Chroma.")
+        if st.button("Initialize database from CSV files"):
+            with st.spinner("Bootstrapping database from CSV files..."):
+                try:
+                    success = bootstrap_database()
+                    if success:
+                        st.success("Database initialization complete. Refresh the page to continue.")
+                    else:
+                        st.error("No CSV files were found or bootstrap failed.")
+                except Exception as exc:
+                    st.error(f"Database bootstrap failed: {exc}")
+            st.stop()
+        render_footer_stats()
+        return
 
     client = get_chroma_client()
     collection = get_collection(client, COLLECTION_NAME)
