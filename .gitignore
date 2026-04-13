@@ -4,3 +4,5 @@ __pycache__/
 *.pyc
 .vscode/
 .env
+hr_chroma_db/
+access_log.csv
