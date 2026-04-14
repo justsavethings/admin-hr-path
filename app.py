@@ -6,6 +6,7 @@ from datetime import datetime
 from pathlib import Path
 
 import streamlit as st
+from init_chromadb import ingest as chroma_ingest
 
 try:
     from chromadb import PersistentClient
@@ -66,6 +67,39 @@ def get_collection(client, name: str):
         return client.get_collection(name)
     except Exception:
         return client.create_collection(name)
+
+
+def find_csv_files() -> list[str]:
+    csv_files = [
+        str(path)
+        for path in Path.cwd().glob("*.csv")
+        if path.name.lower() != LOG_PATH.name.lower()
+    ]
+    return sorted(csv_files)
+
+
+def is_collection_empty(collection) -> bool:
+    try:
+        count = collection.count()
+        return count == 0
+    except Exception:
+        try:
+            result = collection.get(ids=["__chroma_probe__"])
+            return len(result.get("ids", [])) == 0
+        except Exception:
+            return True
+
+
+def bootstrap_database() -> bool:
+    csv_files = find_csv_files()
+    if not csv_files:
+        return False
+
+    for csv_path in csv_files:
+        if Path(csv_path).name.lower() == LOG_PATH.name.lower():
+            continue
+        chroma_ingest(csv_path=csv_path, chunk_size=10000, client_path=DB_PATH)
+    return True
 
 
 # -----------------------------
@@ -503,6 +537,31 @@ def main():
 
     client = get_chroma_client()
     collection = get_collection(client, COLLECTION_NAME)
+
+    if is_collection_empty(collection):
+        render_lookup_panel()
+        st.warning(
+            "Database is not yet initialized. Click the button below to load CSV data into Chroma."
+        )
+        if st.button("Initialize Chroma database", use_container_width=True):
+            with st.spinner("Bootstrapping database from CSV files..."):
+                success = bootstrap_database()
+            if success:
+                st.success("Database initialized. Refresh the page and try again.")
+                st.experimental_rerun()
+            else:
+                st.error("No CSV files were found for ingestion.")
+
+        csv_files = find_csv_files()
+        if csv_files:
+            st.info("Detected CSV files ready for ingestion:")
+            for csv_file in csv_files:
+                st.caption(f"• {Path(csv_file).name}")
+        else:
+            st.error("No CSV files were detected in the app folder.")
+
+        render_footer_stats()
+        return
 
     render_lookup_panel()
     st.write("")
