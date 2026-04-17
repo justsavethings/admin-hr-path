@@ -618,7 +618,7 @@ def main():
             else:
                 st.warning("Finance document file is missing from disk.")
         else:
-            st.warning("Please delete the email – you don’t work with this company.")
+            st.warning("Email not found in the finance access list. Please verify the email address and try again.")
 
     render_footer_stats()
 
