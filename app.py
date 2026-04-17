@@ -537,6 +537,7 @@ def main():
 
     client = get_chroma_client()
     collection = get_collection(client, COLLECTION_NAME)
+    csv_files = find_csv_files()
 
     if is_collection_empty(collection):
         render_lookup_panel()
@@ -552,7 +553,6 @@ def main():
             else:
                 st.error("No CSV files were found for ingestion.")
 
-        csv_files = find_csv_files()
         if csv_files:
             st.info("Detected CSV files ready for ingestion:")
             for csv_file in csv_files:
@@ -565,6 +565,21 @@ def main():
 
     render_lookup_panel()
     st.write("")
+
+    if csv_files:
+        st.info("Detected CSV files available for refresh:")
+        for csv_file in csv_files:
+            st.caption(f"• {Path(csv_file).name}")
+        if st.button("Refresh Chroma database from CSV files", use_container_width=True):
+            with st.spinner("Updating database from CSV files..."):
+                success = bootstrap_database()
+            if success:
+                st.success("Database refreshed. Refresh the page and try again.")
+                st.experimental_rerun()
+            else:
+                st.error("No CSV files were found for ingestion.")
+    else:
+        st.info("No CSV files were detected in the app folder.")
 
     left, right = st.columns([4.2, 1.3], vertical_alignment="bottom")
     with left:
