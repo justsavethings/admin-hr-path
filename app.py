@@ -564,26 +564,22 @@ def main():
 
     if collection_count == 0:
         render_lookup_panel()
-        st.warning(
-            "Database is not yet initialized. Click the button below to load CSV data into Chroma."
-        )
-        if st.button("Initialize Chroma database", use_container_width=True):
+        if csv_files:
+            st.info("Database is empty. Bootstrapping from CSV files now...")
+            for csv_file in csv_files:
+                st.caption(f"• {Path(csv_file).name}")
             with st.spinner("Bootstrapping database from CSV files..."):
                 success = bootstrap_database()
             if success:
-                st.success("Database initialized. Refresh the page and try again.")
+                st.success("Database initialized. Refreshing the page...")
                 st.experimental_rerun()
             else:
                 st.error("No CSV files were found for ingestion.")
-
-        if csv_files:
-            st.info("Detected CSV files ready for ingestion:")
-            for csv_file in csv_files:
-                st.caption(f"• {Path(csv_file).name}")
         else:
-            st.error("No CSV files were detected in the app folder.")
-
-        render_footer_stats()
+            st.warning(
+                "Database is not yet initialized. No CSV files were detected in the app folder."
+            )
+            render_footer_stats()
         return
 
     render_lookup_panel()
