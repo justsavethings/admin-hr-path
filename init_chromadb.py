@@ -42,7 +42,7 @@ EXPECTED_METADATA_COLUMNS = [
 ]
 
 # safe upsert sub-batch size (below observed max from chroma errors)
-DEFAULT_MAX_UPSERT_BATCH = 5000
+DEFAULT_MAX_UPSERT_BATCH = 1000
 
 
 def ensure_collection(client: PersistentClient, name: str):

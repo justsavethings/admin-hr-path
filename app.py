@@ -59,7 +59,8 @@ def log_access(email: str, metadata: dict):
 
 @st.cache_resource
 def get_chroma_client(path: str = DB_PATH):
-    return PersistentClient(path=path)
+    client = PersistentClient(path=path)
+    return client
 
 
 def get_collection(client, name: str):
@@ -67,6 +68,17 @@ def get_collection(client, name: str):
         return client.get_collection(name)
     except Exception:
         return client.create_collection(name)
+
+
+def refresh_collection():
+    """Force refresh the collection by clearing cache and getting fresh reference"""
+    st.cache_resource.clear()
+    client = PersistentClient(path=DB_PATH)
+    try:
+        collection = client.get_collection(COLLECTION_NAME)
+    except Exception:
+        collection = client.create_collection(COLLECTION_NAME)
+    return collection, client
 
 
 def find_csv_files() -> list[str]:
@@ -98,7 +110,10 @@ def bootstrap_database() -> bool:
     for csv_path in csv_files:
         if Path(csv_path).name.lower() == LOG_PATH.name.lower():
             continue
-        chroma_ingest(csv_path=csv_path, chunk_size=10000, client_path=DB_PATH)
+        chroma_ingest(csv_path=csv_path, chunk_size=1000, client_path=DB_PATH)
+    
+    # Clear Streamlit cache to force fresh client connection on next page reload
+    st.cache_resource.clear()
     return True
 
 
@@ -535,11 +550,17 @@ def main():
     inject_css()
     render_hero()
 
-    client = get_chroma_client()
-    collection = get_collection(client, COLLECTION_NAME)
+    # Use refresh_collection to ensure we get fresh database state
+    collection, client = refresh_collection()
     csv_files = find_csv_files()
+    
+    # Check collection count
+    try:
+        collection_count = collection.count()
+    except Exception:
+        collection_count = 0
 
-    if is_collection_empty(collection):
+    if collection_count == 0:
         render_lookup_panel()
         st.warning(
             "Database is not yet initialized. Click the button below to load CSV data into Chroma."
@@ -570,14 +591,21 @@ def main():
         st.info("Detected CSV files available for refresh:")
         for csv_file in csv_files:
             st.caption(f"• {Path(csv_file).name}")
-        if st.button("Refresh Chroma database from CSV files", use_container_width=True):
-            with st.spinner("Updating database from CSV files..."):
-                success = bootstrap_database()
-            if success:
-                st.success("Database refreshed. Refresh the page and try again.")
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("Refresh Chroma database from CSV files", use_container_width=True):
+                with st.spinner("Updating database from CSV files..."):
+                    success = bootstrap_database()
+                if success:
+                    st.success("Database refreshed. Refresh the page and try again.")
+                    st.experimental_rerun()
+                else:
+                    st.error("No CSV files were found for ingestion.")
+        with col2:
+            if st.button("Clear database", use_container_width=True):
+                collection.delete(collection.get()["ids"])
+                st.success("Database cleared. Refresh the page to initialize.")
                 st.experimental_rerun()
-            else:
-                st.error("No CSV files were found for ingestion.")
     else:
         st.info("No CSV files were detected in the app folder.")
 
