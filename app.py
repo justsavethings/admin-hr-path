@@ -13,10 +13,12 @@ try:
 except Exception as exc:
     raise ImportError("chromadb is required. Install with `pip install chromadb`.") from exc
 
-DB_PATH = "./hr_chroma_db"
+BASE_DIR = Path(__file__).resolve().parent
+DB_PATH = BASE_DIR / "hr_chroma_db"
 COLLECTION_NAME = "employee_db"
 HANDBOOK_FILENAME = "employee-handbook.html"
-LOG_PATH = Path("access_log.csv")
+HANDBOOK_PATH = BASE_DIR / HANDBOOK_FILENAME
+LOG_PATH = BASE_DIR / "access_log.csv"
 
 
 # -----------------------------
@@ -84,7 +86,7 @@ def refresh_collection():
 def find_csv_files() -> list[str]:
     csv_files = [
         str(path)
-        for path in Path.cwd().glob("*.csv")
+        for path in BASE_DIR.glob("*.csv")
         if path.name.lower() != LOG_PATH.name.lower()
     ]
     return sorted(csv_files)
@@ -645,9 +647,9 @@ def main():
             log_access(email, metadata)
 
             st.write("")
-            if os.path.exists(HANDBOOK_FILENAME):
+            if HANDBOOK_PATH.exists():
                 try:
-                    with open(HANDBOOK_FILENAME, "rb") as fh:
+                    with open(HANDBOOK_PATH, "rb") as fh:
                         pdf_bytes = fh.read()
                     st.download_button(
                         label="Download Salary Advice & Account Confirmation",
